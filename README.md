@@ -4,11 +4,11 @@ This repository contains a refactored version of the GNN-based autoencoder pipel
 
 The core idea is:
 
-1. **Preprocess raw flow CSVs** into time-windowed data. :contentReference[oaicite:1]{index=1}  
-2. **Aggregate per IP-pair features** and build a **temporal multi-digraph** (NetworkX). :contentReference[oaicite:2]{index=2}  
-3. Convert the multigraph into a **DGL graph** with edge/node features. :contentReference[oaicite:3]{index=3}  
-4. Train an **enhanced GNN autoencoder + DGI-style objective** to learn normal behavior and detect anomalies via reconstruction error. :contentReference[oaicite:4]{index=4}  
-5. Evaluate detection performance (AUC, TPR/TNR, confusion matrix, etc.) on a test graph. :contentReference[oaicite:5]{index=5}  
+1. **Preprocess raw flow CSVs** into time-windowed data. 
+2. **Aggregate per IP-pair features** and build a **temporal multi-digraph** (NetworkX).
+3. Convert the multigraph into a **DGL graph** with edge/node features.
+4. Train an **enhanced GNN autoencoder + DGI-style objective** to learn normal behavior and detect anomalies via reconstruction error.
+5. Evaluate detection performance (AUC, TPR/TNR, confusion matrix, etc.) on a test graph. 
 
 The code is organized as a small Python package so it can be used both as a **command-line script** (`main.py`) and as an **importable module**.
 
@@ -21,50 +21,50 @@ The code is organized as a small Python package so it can be used both as a **co
   - Preprocessing utilities (`time_window`, scaling helpers)
   - Graph construction (`build_multigraph`, `convert_to_dgl_multigraph`)
   - Models (`EnhancedGNNAutoencoder`, `EnhancedGNNModel`)
-  - Training & evaluation helpers (`train_model`, `evaluate`) :contentReference[oaicite:6]{index=6}  
+  - Training & evaluation helpers (`train_model`, `evaluate`)
 
 - `data_preprocessing.py`  
-  - `time_window(df, time_interval="2T")`: converts raw flow CSV into a time-indexed DataFrame with a `"Time Group"` column, after fixing early-morning timestamps. :contentReference[oaicite:7]{index=7}  
-  - `split_by_time_window(df)`: splits the data into a list of `(time_group, window_df)` tuples. :contentReference[oaicite:8]{index=8}  
-  - `train_scaler_on_full_data(flow_data)`: aggregates per-IP-pair features across all windows and trains a global edge feature scaler (StandardScaler). :contentReference[oaicite:9]{index=9}  
-  - `apply_scaler_to_features(aggregated_data, scaler)`: applies the learned scaler to a single window’s aggregated features. :contentReference[oaicite:10]{index=10}  
-  - `save_scaler`, `load_scaler`, `save_node_scalers`, `load_node_scalers`: utilities to persist/load scalers for edges and node stats. :contentReference[oaicite:11]{index=11}  
+  - `time_window(df, time_interval="2T")`: converts raw flow CSV into a time-indexed DataFrame with a `"Time Group"` column, after fixing early-morning timestamps.
+  - `split_by_time_window(df)`: splits the data into a list of `(time_group, window_df)` tuples.  
+  - `train_scaler_on_full_data(flow_data)`: aggregates per-IP-pair features across all windows and trains a global edge feature scaler (StandardScaler). 
+  - `apply_scaler_to_features(aggregated_data, scaler)`: applies the learned scaler to a single window’s aggregated features. 
+  - `save_scaler`, `load_scaler`, `save_node_scalers`, `load_node_scalers`: utilities to persist/load scalers for edges and node stats.  
 
 - `graph_construction.py`  
-  - `extract_ips_from_flow_id` and `extract_features_per_ip_pair(window_data)`: aggregate CIC-IDS-style flow records into **per (Source IP, Destination IP)** features with statistics over packet counts, lengths, and port usage, and assign binary labels. :contentReference[oaicite:12]{index=12}  
-  - `extract_node_features(multigraph)`: compute per-node 1-hop structural features such as graph density, out-degree, in-degree, and clustering coefficient. :contentReference[oaicite:13]{index=13}  
-  - `construct_multigraph_from_features(grouped_features)`: builds a `networkx.MultiDiGraph` with edge attributes including time-group and aggregated features. :contentReference[oaicite:14]{index=14}  
+  - `extract_ips_from_flow_id` and `extract_features_per_ip_pair(window_data)`: aggregate CIC-IDS-style flow records into **per (Source IP, Destination IP)** features with statistics over packet counts, lengths, and port usage, and assign binary labels. 
+  - `extract_node_features(multigraph)`: compute per-node 1-hop structural features such as graph density, out-degree, in-degree, and clustering coefficient.
+  - `construct_multigraph_from_features(grouped_features)`: builds a `networkx.MultiDiGraph` with edge attributes including time-group and aggregated features. 
   - `build_multigraph(flow_data, train=True)`: full pipeline that
     - groups data by time
     - aggregates per-IP-pair features (with labels)
     - fits or loads edge and node scalers
     - attaches both scaled and raw features to edges and nodes
-    - returns the temporal multigraph and mapping dictionaries. :contentReference[oaicite:15]{index=15}  
-  - `convert_to_dgl_multigraph(nx_multigraph, node_to_int_map)`: converts the NetworkX multigraph into a DGL graph with:
+    - returns the temporal multigraph and mapping dictionaries. 
+  - `convert_to_dgl_multigraph(nx_multigraph, node_to_int_map)`
     - `edata["feat"]`: scaled edge features
     - `edata["raw_feature"]`: raw (unscaled) edge features
     - `edata["time"]`: time-group index
     - `edata["label"]`: binary edge label
     - `ndata["feat"]`: scaled per-node structural features
-    - `ndata["node_indicate"]`: simple node indicator feature. :contentReference[oaicite:16]{index=16}  
+    - `ndata["node_indicate"]`: simple node indicator feature.
 
 - `gnn_models.py`  
   - `EnhancedGNNAutoencoder`: a two-stage message-passing autoencoder that:
     - projects node and edge features into a shared hidden space,
     - aggregates node messages to edges twice,
-    - encodes edge embeddings into a latent space and decodes them back to edge features. :contentReference[oaicite:17]{index=17}  
-  - `Discriminator`: a simple bilinear discriminator used for DGI-style contrastive learning. :contentReference[oaicite:18]{index=18}  
+    - encodes edge embeddings into a latent space and decodes them back to edge features.
+  - `Discriminator`: a simple bilinear discriminator used for DGI-style contrastive learning. 
   - `EnhancedGNNModel`: wraps the autoencoder and discriminator, combining:
     - reconstruction loss on original and augmented edges,
     - DGI-style loss between positive (original/augmented) and negative (corrupted) samples,
-    - returns a dictionary of detailed losses and per-edge MSE scores. :contentReference[oaicite:19]{index=19}  
+    - returns a dictionary of detailed losses and per-edge MSE scores.
 
 - `training_eval.py`  
-  - `train_model(...)`: training loop that logs epoch-wise loss, measures total training time, and saves the final model checkpoint to disk. :contentReference[oaicite:20]{index=20}  
-  - `measure_inference_time(...)`: measures average inference time per graph over multiple runs. :contentReference[oaicite:21]{index=21}  
+  - `train_model(...)`: training loop that logs epoch-wise loss, measures total training time, and saves the final model checkpoint to disk.
+  - `measure_inference_time(...)`: measures average inference time per graph over multiple runs.
   - `evaluate(model, graph, ...)`: computes reconstruction-based anomaly scores, threshold selection, confusion matrix, and standard classification metrics (accuracy, ROC AUC, TPR/TNR/FPR). It also returns detailed detection data (TP, FP, FN, TN sets with raw/original/reconstructed features). :contentReference[oaicite:22]{index=22}  
 
 - `main.py`  
-  - Simple **CLI entry point** for training and evaluating `EnhancedGNNModel` on train/test CSVs. :contentReference[oaicite:23]{index=23}  
+  - Simple **CLI entry point** for training and evaluating `EnhancedGNNModel` on train/test CSVs.
 
 ---
