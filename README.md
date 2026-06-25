@@ -74,3 +74,32 @@ The code is organized as a small Python package so it can be used both as a **co
   - Simple **CLI entry point** for training and evaluating `EnhancedGNNModel` on train/test CSVs.
 
 ---
+
+## Datasets
+
+The framework is evaluated on five publicly available datasets spanning enterprise,
+cloud, industrial IoT, and end-to-end TLS-encrypted DNS-over-HTTPS environments.
+All datasets are obtained from their original public sources listed below;
+they are **not** redistributed in this repository.
+
+| Dataset | Environment | Source |
+|---|---|---|
+| **CIC-IDS2017** | On-premises enterprise | https://www.unb.ca/cic/datasets/ids-2017.html |
+| **NF-CSE-CIC-IDS2018-v3** | Cloud (NetFlow v3, 53 features) | https://espace.library.uq.edu.au/view/UQ:ece9b83 (UQ NIDS datasets: https://www.cyber.uq.edu.au/project/machine-learning-based-nids-datasets) |
+| **Edge-IIoTset** | Industrial IoT testbed | https://www.kaggle.com/datasets/mohamedamineferrag/edgeiiotset-cyber-security-dataset-of-iot-iiot (IEEE DataPort: https://ieee-dataport.org/documents/edge-iiotset-new-comprehensive-realistic-cyber-security-dataset-iot-and-iiot-applications) |
+| **DoH (benign) — Jeřábek corpus** | TLS-encrypted DoH (real-world ISP) | https://zenodo.org/records/5956044 |
+| **CIRA-CIC-DoHBrw-2020** | TLS-encrypted DoH (benign + malicious tunneling) | https://www.unb.ca/cic/datasets/dohbrw-2020.html |
+
+**Encrypted DoH Setup 2 / Setup 3** are constructed by combining the Jeřábek
+real-world DoH corpus (benign traffic) with the malicious DoH tunneling flows
+from CIRA-CIC-DoHBrw-2020 (six tunneling tools: DNS2TCP, DNSCat2, Iodine, dnstt,
+tcp-over-dns, tuns). See Section 4.1 of the paper for the exact train/test
+temporal-split protocol.
+
+> Please cite the original dataset papers when using them. The intrusion-detection
+> benchmarks (CIC-IDS2017, CSE-CIC-IDS2018, DoHBrw-2020) are provided by the
+> Canadian Institute for Cybersecurity (UNB); the NetFlow v3 conversion is from
+> the University of Queensland NIDS datasets project; Edge-IIoTset is by
+> Ferrag et al. (2022); and the real-world DoH corpus is by Jeřábek et al. (2022).
+
+---
