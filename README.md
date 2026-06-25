@@ -58,6 +58,12 @@ The code is organized as a small Python package so it can be used both as a **co
     - reconstruction loss on original and augmented edges,
     - DGI-style loss between positive (original/augmented) and negative (corrupted) samples,
     - returns a dictionary of detailed losses and per-edge MSE scores.
+    - **Hybrid topology-aware augmentation (Sec. 3.1.3)**: each training view jointly
+      applies (i) feature-level Gaussian noise with intensity schedule
+      `Lambda = {0.2, 0.4, 0.6}`, (ii) stochastic edge dropping at rate `p_e = 0.05`,
+      and (iii) node feature masking at rate `p_n = 0.03`. Controlled by the
+      `aug_mode` (`"gaussian" | "edge_drop" | "node_mask" | "hybrid"`, default
+      `"hybrid"`), `edge_drop_p`, `node_mask_p`, and `augmentation_levels` arguments.
 
 - `training_eval.py`  
   - `train_model(...)`: training loop that logs epoch-wise loss, measures total training time, and saves the final model checkpoint to disk.
